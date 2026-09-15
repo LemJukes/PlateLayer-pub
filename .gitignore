@@ -1,0 +1,38 @@
+## dotnet build output
+bin/
+obj/
+artifacts/
+
+## dist: the release ZIP and its checksum are tracked; nothing else is
+dist/*
+!dist/*.zip
+!dist/*.zip.sha256
+
+## Test Results
+TestResults/
+
+## Visual Studio Code
+.vscode/
+*.code-workspace
+
+## Visual Studio
+.vs/
+*.sln.docstates
+*.user
+*.userosscache
+*.sln.user
+*.suo
+
+## AutoCAD managed assemblies are referenced in place, never committed.
+acdbmgd.dll
+accoremgd.dll
+acmgd.dll
+
+## Local environment
+.env
+.env.local
+
+## AutoCAD backups and drawing locks
+*.bak
+*.dwl
+*.dwl2

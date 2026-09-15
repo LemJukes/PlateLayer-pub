@@ -1,0 +1,188 @@
+PlateLayer - alpha install
+==========================
+
+AutoCAD 2026, Windows, 64-bit.
+
+PlateLayer takes the flat 2D part geometry in a CNC cut-layout drawing and lays it out in paper
+space: one viewport per part, at a stated scale, grouped by material, labelled and dimensioned.
+It writes new layout tabs and never modifies the model-space geometry it reads.
+
+
+STEP 1 - UNBLOCK THE ZIP BEFORE YOU EXTRACT IT
+----------------------------------------------
+
+Do this first. It is the single most common reason the plug-in appears to install and then does
+nothing at all.
+
+Windows tags every file downloaded from the internet, and AutoCAD will not load a tagged DLL. If
+you extract first and unblock afterwards, you have to unblock each DLL separately, because the tag
+is copied onto every file that comes out of the archive.
+
+  1. Right-click the downloaded ZIP.
+  2. Properties.
+  3. If there is an "Unblock" checkbox at the bottom of the General tab, tick it.
+  4. OK.
+
+If there is no Unblock checkbox, the file was not tagged and there is nothing to do.
+
+PowerShell equivalent:
+
+    Unblock-File -Path .\PlateLayer-Alpha-1.4.zip
+
+
+STEP 2 - EXTRACT
+----------------
+
+Close AutoCAD first. It holds a loaded plug-in DLL open for the life of the process, so an install
+over a running AutoCAD will fail or be ignored.
+
+Copy the PlateLayer.bundle folder out of the ZIP and into:
+
+    %APPDATA%\Autodesk\ApplicationPlugins\
+
+Paste that path into the Explorer address bar to get there. When you are done you should have:
+
+    %APPDATA%\Autodesk\ApplicationPlugins\PlateLayer.bundle\PackageContents.xml
+    %APPDATA%\Autodesk\ApplicationPlugins\PlateLayer.bundle\Contents\PlateLayer.Cad.dll
+    %APPDATA%\Autodesk\ApplicationPlugins\PlateLayer.bundle\Contents\PlateLayer.Core.dll
+
+Do not rename the folder. The ".bundle" suffix is how AutoCAD finds it.
+
+
+STEP 3 - START AUTOCAD AND CHECK
+--------------------------------
+
+Start AutoCAD, open any drawing, and type:
+
+    PLLSET
+
+The first line it prints should be:
+
+    PlateLayer Alpha 1.4
+
+That string is read off the assembly, not from a literal in the source, so if it says anything
+else you are running a different build than you think you are.
+
+Press Esc or answer Quit to leave the settings prompt without changing anything.
+
+There is no NETLOAD step and no ribbon button in this alpha. The commands are typed.
+
+
+IF PLLSET IS NOT RECOGNISED
+---------------------------
+
+The failure is silent by design - AutoCAD does not report a plug-in it declined to load - so work
+through these in order.
+
+  1. Did you unblock the ZIP before extracting? If not, delete the folder you extracted, go back to
+     step 1, and redo it. Unblocking the ZIP after extraction does not fix the extracted files.
+
+  2. Is the path right? PackageContents.xml must sit in the root of PlateLayer.bundle, and the two
+     DLLs in a Contents subfolder. One extra nested folder - PlateLayer.bundle\PlateLayer.bundle\ -
+     is the usual extraction slip.
+
+  3. Trusted locations. AutoCAD only loads code from folders it trusts. Type TRUSTEDPATHS and check
+     whether the list covers the ApplicationPlugins folder. If it does not, add it:
+
+         Options > Files > Trusted Locations > Add
+         %APPDATA%\Autodesk\ApplicationPlugins\...
+
+     The three dots on the end are literal AutoCAD syntax and mean "and all subfolders".
+
+     AutoCAD will warn that the folder is not read-only. That warning is expected for a per-user
+     folder and can be accepted.
+
+     Do NOT set SECURELOAD to 0. That switches the check off for every drawing you open, including
+     ones you did not author, and it is not needed here.
+
+  4. If step 3 does not stick, install to the machine-wide location instead. Autodesk's own
+     documentation describes this one as trusted; it needs administrator rights. Close AutoCAD,
+     delete the copy under %APPDATA%, and put PlateLayer.bundle here instead:
+
+         %PROGRAMFILES%\Autodesk\ApplicationPlugins\
+
+     Same folder layout, same everything else.
+
+  5. Wrong AutoCAD release. This alpha supports AutoCAD 2026 only. On any other release it is
+     ignored, and ignored silently. Check HELP > ABOUT.
+
+  6. Still nothing: send me the output of TRUSTEDPATHS, your AutoCAD version from the ABOUT box,
+     and a screenshot of the PlateLayer.bundle folder.
+
+
+COMMANDS
+--------
+
+    PLL         the main command - select part geometry, review the plan, generate plates
+    PLATELAYER  the same command under its long name
+    PLLSET      settings - template layout, parts per plate, scale policy, dimensions, approval
+
+Start with a dry run. Type PLL, select the geometry, and answer No at the Proceed prompt: the plan
+prints to the text window (F2) and the drawing is not touched. That tells you how many plates you
+are about to get, at what scale, and why - before anything is drawn.
+
+
+WHAT IT NEEDS FROM YOUR DRAWING
+-------------------------------
+
+PlateLayer clones a paper-space layout tab as its plate template and reads the shop conventions out
+of it rather than inventing them. Out of the box it expects:
+
+    a layout tab named           ANSI B      (PLLSET > Template to point it elsewhere)
+    a title block with tags      $PLATE_NAME, $PIECE/PART_NAME, #DRAWING_DATE, # and ##
+    part layers named            <prefix><CODE>_<thickness>, e.g. rPLY_3-4
+
+Layers it needs and cannot find, it creates - and says so at the end of a run, because a missing
+convention layer means the drawing was not built from the usual template and the new layer's colour
+and plot settings are guesses.
+
+Those five title block attributes are the only ones it ever writes. Project name, client, producer,
+draftsperson, approved-by and notes belong to whoever set the drawing up, and are left alone.
+
+
+UPDATING
+--------
+
+Close AutoCAD, delete the whole PlateLayer.bundle folder, and install the new ZIP from step 1.
+Deleting first matters - a leftover file from an older version is not overwritten by a newer
+package that no longer contains it.
+
+
+UNINSTALLING
+------------
+
+Close AutoCAD and delete:
+
+    %APPDATA%\Autodesk\ApplicationPlugins\PlateLayer.bundle\
+
+That is the whole uninstall. Nothing is written to the registry and nothing is installed elsewhere.
+
+Two things are left behind on purpose, and neither affects AutoCAD:
+
+    the plate layouts it drew, in any drawing you ran it on
+    its settings, stored in those drawings' own dictionaries
+
+Both live in the drawing rather than on the machine, so a drawing you send somebody carries its own
+settings with it and none of yours.
+
+
+ALPHA - WHAT TO EXPECT
+----------------------
+
+This is an alpha. It is in use on real cut files but it has not been through many hands.
+
+  - Always work on a copy of a drawing you care about.
+  - Answer No at the Proceed prompt first. The dry run changes nothing and tells you the plate
+    count, the scale per plate and which constraint is deciding both.
+  - Per-plate approval is on by default: Accept, Redo, Skip, aLl, eXit. "aLl" finishes the run
+    without asking again.
+  - Geometry on a layer the tool excludes is reported by layer and count rather than silently
+    dropped. Read that line - a material drawn on the wrong layer upstream is exactly what it
+    catches.
+  - Rotation-aware packing, part ids and plot/PDF export are not built.
+
+Bug reports are useful in proportion to the drawing attached. If a plate comes out wrong, the
+drawing that produced it is worth more than any description of it, and the dry-run text is the
+next best thing.
+
+    Rob Garner - rob@rjgarner.com

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationPackage
+    SchemaVersion="1.0"
+    AutodeskProduct="AutoCAD"
+    Name="PlateLayer"
+    Description="Lays flat 2D part geometry into paper-space plates - one viewport per part, grouped by material, labelled and dimensioned."
+    AppVersion="1.4.0"
+    FriendlyVersion="Alpha 1.4"
+    ProductType="Application"
+    SupportedLocales="Enu"
+    Author="Rob Garner"
+    ProductCode="{DCA184DA-8421-4317-A755-31FA3BD98EB9}"
+    UpgradeCode="{4A2A7BEB-C462-4D20-8098-A6B0A7EB15A6}"
+    >
+  <CompanyDetails Name="Rob Garner" Url="https://github.com/LemJukes/PlateLayer-pub" Email="rob@rjgarner.com" />
+
+  <!--
+    AutoCAD 2026 (R25.1) only. PlateLayer.Cad references acdbmgd / accoremgd / acmgd in place from
+    an installed AutoCAD 2026, and nothing has been built or run against 2025. PartLayer's manifest
+    spans R25.0-R25.1 because it resolves the same API through the versioned AutoCAD.NET NuGet
+    packages; this project does not, so the range is narrowed to what has actually been exercised
+    rather than widened to what probably works.
+  -->
+  <Components Description="AutoCAD 2026 x64">
+    <RuntimeRequirements OS="Win64" Platform="AutoCAD*" SeriesMin="R25.1" SeriesMax="R25.1" />
+    <ComponentEntry
+        AppName="PlateLayer"
+        Version="1.4.0"
+        AppDescription="Lay parts into paper-space plates."
+        ModuleName="./Contents/PlateLayer.Cad.dll"
+        PerDocument="False"
+        LoadOnAutoCADStartup="True">
+      <!--
+        With LoadOnAutoCADStartup="True" this block is metadata rather than the registration path -
+        the assembly's own [CommandMethod] attributes register the commands - but it is what an
+        App Store listing would show, so it is complete.
+      -->
+      <Commands GroupName="PLATELAYER">
+        <Command Local="PLL" Global="PLL" />
+        <Command Local="PLATELAYER" Global="PLATELAYER" />
+        <Command Local="PLLSET" Global="PLLSET" />
+      </Commands>
+      <AssemblyMappings>
+        <AssemblyMapping Name="PlateLayer.Core" Path="./Contents/PlateLayer.Core.dll" />
+      </AssemblyMappings>
+    </ComponentEntry>
+  </Components>
+
+</ApplicationPackage>

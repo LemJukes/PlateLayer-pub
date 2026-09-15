@@ -1,0 +1,25 @@
+<Project>
+  <PropertyGroup>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningLevel>5</WarningLevel>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+  </PropertyGroup>
+
+  <!--
+    Versioning: Alpha 1.# while the tool is still being shaped against real cut files.
+    The minor number is the only one that moves, and it moves ONLY when the operator says so —
+    not automatically per change, and not because a pass felt significant. Work lands under the
+    current version until the version is deliberately bumped and the commit tagged to match.
+    This is the single source of truth; the PLL command prints it at run time rather than
+    carrying its own copy.
+  -->
+  <PropertyGroup>
+    <VersionPrefix>1.4.0</VersionPrefix>
+    <AssemblyVersion>1.4.0.0</AssemblyVersion>
+    <FileVersion>1.4.0.0</FileVersion>
+    <InformationalVersion>Alpha 1.4</InformationalVersion>
+    <Product>PlateLayer</Product>
+    <Authors>Rob Garner</Authors>
+  </PropertyGroup>
+</Project>

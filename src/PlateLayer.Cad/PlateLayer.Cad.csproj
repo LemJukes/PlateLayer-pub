@@ -1,0 +1,70 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>PlateLayer.Cad</RootNamespace>
+    <UseWindowsForms>false</UseWindowsForms>
+    <PlatformTarget>x64</PlatformTarget>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <!-- Override on the command line if AutoCAD lives elsewhere:
+         dotnet build -p:AcadDir="C:\Program Files\Autodesk\AutoCAD 2026\" -->
+    <AcadDir Condition="'$(AcadDir)' == ''">C:\Program Files\Autodesk\AutoCAD 2026\</AcadDir>
+  </PropertyGroup>
+
+  <!-- Reference-only. Never copied to output, never committed. -->
+  <ItemGroup>
+    <Reference Include="accoremgd">
+      <HintPath>$(AcadDir)accoremgd.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="acdbmgd">
+      <HintPath>$(AcadDir)acdbmgd.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="acmgd">
+      <HintPath>$(AcadDir)acmgd.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PlateLayer.Core\PlateLayer.Core.csproj" />
+  </ItemGroup>
+  <!--
+    Deploys the .bundle to the per-user ApplicationPlugins folder so a clean AutoCAD start exposes
+    the commands with no NETLOAD. This is how the plug-in is loaded now, in development and in
+    release alike - the NETLOAD dev loop is retired.
+
+    ContinueOnError="WarnAndContinue" is deliberate: AutoCAD locks a loaded assembly for the life
+    of the process (there is no unload), so any build started while AutoCAD is open cannot
+    overwrite the deployed DLL. That must warn, not fail the build. An MSB3021 warning here means
+    "the deployed bundle is stale", not "the build is broken" - close AutoCAD and rebuild.
+
+    Retries="0" because the default is 10 retries a second apart, and the thing being waited on is
+    an AutoCAD process that will hold the lock until it exits. Retrying cannot succeed: it only
+    turns one honest warning per file into ten, and adds ~20 seconds to every build made with
+    AutoCAD open. Fail the copy immediately and say so once.
+
+    Consequence worth knowing: "what is installed locally" tracks whichever configuration was
+    built last. Build Debug and the installed bundle holds Debug binaries until you build Release
+    again. dev/pack.ps1 says so when it runs.
+  -->
+  <Target Name="DeployBundle" AfterTargets="Build">
+    <PropertyGroup>
+      <BundleDir>$(APPDATA)\Autodesk\ApplicationPlugins\PlateLayer.bundle</BundleDir>
+      <BundleContentsDir>$(BundleDir)\Contents</BundleContentsDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <BundleManifest Include="$(ProjectDir)..\..\PlateLayer.bundle\PackageContents.xml"/>
+      <BundleAssemblies Include="$(OutputPath)PlateLayer.Cad.dll"/>
+      <BundleAssemblies Include="$(OutputPath)PlateLayer.Core.dll"/>
+    </ItemGroup>
+    <MakeDir Directories="$(BundleContentsDir)"/>
+    <Copy SourceFiles="@(BundleManifest)" DestinationFolder="$(BundleDir)" Retries="0" ContinueOnError="WarnAndContinue"/>
+    <Copy SourceFiles="@(BundleAssemblies)" DestinationFolder="$(BundleContentsDir)" Retries="0" ContinueOnError="WarnAndContinue"/>
+  </Target>
+
+</Project>
