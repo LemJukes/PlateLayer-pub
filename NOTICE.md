@@ -29,6 +29,9 @@ modified versions, or incorporate the code into another project.
 retracted from code already published under it. Tightening is the direction that does not work, so
 the alpha starts at the end that leaves the decision open.
 
+The reasoning behind this decision is recorded in the JukeBox project's internal licensing research —
+not a publicly accessible document.
+
 ## Third-party code
 
 None of Autodesk's code is redistributed here. `PlateLayer.Cad` references `acdbmgd`, `accoremgd`
